@@ -28,3 +28,27 @@ to 10 minutes for a typical 50GiB volume). This is normal.
 
 Specify your preferred AWS credential profile with Set-AWSCredentials. See
 http://docs.aws.amazon.com/powershell/latest/userguide/specifying-your-aws-credentials.html
+
+The following permissions are required on your IAM account:
+
+```
+"ec2:AttachVolume",
+"ec2:CreateSnapshot",
+"ec2:CreateTags",
+"ec2:CreateVolume",
+"ec2:DescribeInstances",
+"ec2:DescribeInstanceAttribute"
+"ec2:DescribeSnapshots",
+"ec2:DescribeTags",
+"ec2:DescribeVolumes",
+"ec2:DetachVolume",
+"ec2:StartInstances",
+"ec2:StopInstances"
+```
+
+And if you want to later delete the snapshot and old volume, you also need:
+
+```
+"ec2:DeleteSnapshot",
+"ec2:DeleteVolume"
+```
