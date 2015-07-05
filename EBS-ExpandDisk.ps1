@@ -494,8 +494,6 @@ CheckShutdownBehavior $instanceId
 # Find relevant volume - use root volume if a volume Id hasn't been specified
 $volumeId = GetVolume $instanceId $volumeId
 
-Exit
-
 # Stop instance if running
 StopInstance $instanceId
 
