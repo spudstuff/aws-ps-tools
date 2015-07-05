@@ -300,11 +300,11 @@ function Add-EC2Tag
 # Create a snapshot of the volume
 ############################################
 
-function CreateSnapshot([string]$volumeId, [string]$serverName, [string]$instanceId)
+function CreateSnapshot([string]$volumeId, [string]$instanceName, [string]$instanceId)
 {
     Log ""
-    Log "Creating snapshot of volume: $volumeId for instance $serverName ($instanceId)"
-    $snapshot = New-EC2Snapshot -VolumeId $volumeId -Description "ebs_expand_$serverName($instanceId)"
+    Log "Creating snapshot of volume: $volumeId for instance $instanceName ($instanceId)"
+    $snapshot = New-EC2Snapshot -VolumeId $volumeId -Description "ebs_expand_$instanceName($instanceId)"
 
     # Get tags of the instance and clone onto the snapshot
     $tags = (Get-EC2Instance -Instance $instanceId).Instances.Tags
@@ -384,13 +384,13 @@ function RestoreSnapshot([string]$snapshotId, [int]$size, [string]$volumeId)
 # Detach the old and attach the new volume
 ############################################
 
-function DetachAndAttach([string]$instanceId, [string]$serverName, [string]$volumeId, [string]$newVolumeId)
+function DetachAndAttach([string]$instanceId, [string]$instanceName, [string]$volumeId, [string]$newVolumeId)
 {
     Log ""
     $volume = Get-EC2Volume -VolumeIds $volumeId
     $device = $volume.Attachment[0].Device
 
-    Log "Detaching old volume $volumeId from $serverName on $device..."
+    Log "Detaching old volume $volumeId from $instanceName on $device..."
     $volAttachment = Dismount-EC2Volume -InstanceId $instanceId -VolumeId $volumeId -Device $device
 
     # Poll until the new volume is detached
@@ -403,7 +403,7 @@ function DetachAndAttach([string]$instanceId, [string]$serverName, [string]$volu
     }
 
     Log ""
-    Log "Attaching new volume $newVolumeId to $serverName as $device..."
+    Log "Attaching new volume $newVolumeId to $instanceName as $device..."
     $volume = Add-EC2Volume -InstanceId $instanceId -VolumeId $newVolumeId -Device $device
 
     # Poll until the new volume is attached
@@ -480,11 +480,11 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "InstanceByName"
     {
-        $instanceId = GetInstanceIdFromName $serverName
+        $instanceId = GetInstanceIdFromName $instanceName
     }
     "InstanceById"
     {
-        $serverName = GetNameFromInstanceId $instanceId
+        $instanceName = GetNameFromInstanceId $instanceId
     }
 }
 
@@ -498,13 +498,13 @@ $volumeId = GetVolume $instanceId $volumeId
 StopInstance $instanceId
 
 # Create a snapshot
-$snapshotId = CreateSnapshot $volumeId $serverName $instanceId
+$snapshotId = CreateSnapshot $volumeId $instanceName $instanceId
 
 # Restore the snapshot to a new volume in the same availability zone
 $newVolumeId = RestoreSnapshot $snapshotId $size $volumeId
 
 # Detach the old volume and attach the new volume
-DetachAndAttach $instanceId $serverName $volumeId $newVolumeId
+DetachAndAttach $instanceId $instanceName $volumeId $newVolumeId
 
 # Start instance
 StartInstance $instanceId
